@@ -1,9 +1,9 @@
 {
   "siteName": {
-    "value": "xDeploymentTestSite13501"
+    "value": "xDeploymentTestSite17271"
   },
   "hostingPlanName": {
-    "value": "xDeploymentTestHost2624"
+    "value": "xDeploymentTestHost23827"
   },
   "siteLocation": {
     "value": "West US"
@@ -15,18 +15,6 @@
     "value": "0"
   }
 }//Single Line Comment 
- /*A 
- Multiline 
- Comment *///Single Line Comment 
- /*A 
- Multiline 
- Comment *///Single Line Comment 
- /*A 
- Multiline 
- Comment *///Single Line Comment 
- /*A 
- Multiline 
- Comment *///Single Line Comment 
  /*A 
  Multiline 
  Comment *///Single Line Comment 

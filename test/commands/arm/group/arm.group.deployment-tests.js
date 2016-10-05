@@ -288,13 +288,9 @@ describe('arm', function () {
         var storageAccountName = suite.generateId('xstorageaccount', createdGroups, suite.isMocked);
         var storageContainerName = suite.generateId('xstoragecontainer', createdGroups, suite.isMocked);
         var deploymentName = suite.generateId('Deploy1', createdDeployments, suite.isMocked);
-        //same content like path.join(__dirname, '../../../data/arm-deployment-template.json')
-        //var templateUri = 'http://azuresdkcitest.blob.core.windows.net/azure-cli-test/arm-deployment-template.json';
         var templateFile = path.join(__dirname, '../../../data/arm-deployment-template.json');
         var CreateStorageAccount = util.format('storage account create -g %s --sku-name LRS --kind Storage %s --location %s --json', groupName, storageAccountName, 'eastus');
         var GetKeyString = util.format('storage account keys list %s -g %s --json', storageAccountName, groupName);
-        //var oCreateDeployment = util.format('group deployment create --template-uri %s -g %s -n %s -e %s --nowait --json',
-            //templateUri, groupName, deploymentName, parameterFile);
         
         suite.execute('group create %s --location %s --json', groupName, testLocation, function (result) {
           result.exitStatus.should.equal(0);
@@ -319,7 +315,7 @@ describe('arm', function () {
                     // This URIwithSAS was generated on the recorded test if a new test is generated then this variable should be replaced with 
                     // the new URIwithSAS created in that recorded session. The reason is nock will record requests with the expiration time
                     // set to thiry minutes after the SAS token generation relative to the time the test was recorded.
-                    URIwithSAS = 'https://xstorageaccount4917.blob.core.windows.net/xstoragecontainer6712/arm-deployment-template.json?se=2016-08-27T02%3A02%3A00Z&sp=r&sv=2015-04-05&sr=b&sig=HjRq7q8o23pXnCyix2ZAJHXPLiuWB5ktibPQn%2FizoKw%3D';
+                    URIwithSAS = 'https://xstorageaccount7643.blob.core.windows.net/xstoragecontainer8327/arm-deployment-template.json?se=2016-10-06T07%3A00%3A00Z&sp=r&sv=2015-04-05&sr=b&sig=vr8a2629A5FHcSNgPQ5T9j7y%2FF9lBmJN0Xu5FmZxE0g%3D';
 
                     suite.execute('group deployment create --template-uri %s -g %s -n %s -e %s --nowait --json', URIwithSAS, groupName, deploymentName, parameterFile, function (deployResult) { 
                       deployResult.exitStatus.should.equal(0);
@@ -378,7 +374,7 @@ describe('arm', function () {
                     // This URIwithSAS was generated on the recorded test if a new test is generated then this variable should be replaced with 
                     // the new URIwithSAS created in that recorded session. The reason is nock records the requests with the expiration time 
                     // set to thiry minutes after the SAS token generation relative to the time the test was recorded.
-                    URIwithSAS = 'https://xstorageaccount714.blob.core.windows.net/xstoragecontainer9648/arm-deployment-template.json?se=2016-08-27T02%3A34%3A00Z&sp=r&sv=2015-04-05&sr=b&sig=H%2B3Fx10IynilQ4hssMCwOlIjmYiBGIUOzGey3pJ5ATI%3D';
+                    URIwithSAS = 'https://xstorageaccount1280.blob.core.windows.net/xstoragecontainer8858/arm-deployment-template.json?se=2016-10-06T07%3A06%3A00Z&sp=r&sv=2015-04-05&sr=b&sig=uWVj%2ByfIms80Ayo4yZH3tCU2SpAN4aHNI2JQRCyZpvo%3D';
 
                     suite.execute('group deployment create --template-uri %s -g %s -e %s --nowait --json', URIwithSAS, groupName, parameterFile, function (deployResult) { 
                       deployResult.exitStatus.should.equal(0);
@@ -539,6 +535,48 @@ describe('arm', function () {
             result.exitStatus.should.equal(1);
             result.errorText.should.include("file does not have { siteLocation } defined.");
             cleanup(done);
+          });
+        });
+      });
+
+      it('should prompt for missing parameter excluding any defaults', function (done) {
+        var parameterString = "{ \"siteName\":{\"value\":\"xDeploymentTestSite1\"}, \"hostingPlanName\":{ \"value\":\"xDeploymentTestHost1\" }, \"workerSize\":{ \"value\":\"0\" }}";
+        var groupName = suite.generateId('xDeploymentTestGroup', createdGroups, suite.isMocked);
+        var deploymentName = suite.generateId('Deploy1', createdDeployments, suite.isMocked);
+        var templateFile = path.join(__dirname, '../../../data/arm-deployment-template.json');
+
+        suite.execute('group create %s --location %s --json', groupName, testLocation, function (result) {
+          result.exitStatus.should.equal(0);
+          suite.execute('group deployment create -f %s -g %s -n %s -p %s --json', templateFile, groupName, deploymentName, parameterString, function (result) {
+            result.exitStatus.should.equal(1);
+            result.errorText.should.include("file does not have { siteLocation } defined.");
+            cleanup(done);
+          });
+        });
+      });
+
+      it('should work with defaults', function (done) {
+        var parameterString = "{ \"siteName\":{\"value\":\"xDeploymentTestSite1\"},\"siteLocation\":{\"value\":\"westus\"}, \"hostingPlanName\":{ \"value\":\"xDeploymentTestHost1\" }, \"workerSize\":{ \"value\":\"0\" }}";
+        var groupName = suite.generateId('xDeploymentTestGroup', createdGroups, suite.isMocked);
+        var deploymentName = suite.generateId('Deploy1', createdDeployments, suite.isMocked);
+        var templateFile = path.join(__dirname, '../../../data/arm-deployment-template.json');
+
+        suite.execute('group create %s --location %s --json', groupName, testLocation, function (result) {
+          result.exitStatus.should.equal(0);
+          suite.execute('group deployment create -f %s -g %s -n %s -p %s --nowait --json -vv',
+            templateFile, groupName, deploymentName, parameterString, function (result) {
+            result.exitStatus.should.equal(0);
+
+            suite.execute('group deployment show -g %s -n %s --json', groupName, deploymentName, function (showResult) {
+              showResult.exitStatus.should.equal(0);
+              showResult.text.indexOf(deploymentName).should.be.above(-1);
+
+              suite.execute('group deployment list -g %s --json', groupName, function (listResult) {
+                listResult.exitStatus.should.equal(0);
+                listResult.text.indexOf(deploymentName).should.be.above(-1);
+                cleanup(done);
+              });
+            });
           });
         });
       });
